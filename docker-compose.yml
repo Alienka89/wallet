@@ -1,0 +1,30 @@
+services:
+  wallet_db:
+    image: mysql:8.0
+    restart: always
+    env_file: .env
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "wallet_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    volumes:
+      - db_data:/var/lib/mysql
+
+  wallet_web:
+    build: .
+    ports:
+      - "127.0.0.1:8004:8000"
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    depends_on:
+      wallet_db:
+        condition: service_healthy
+    env_file: .env
+
+volumes:
+  db_data:
